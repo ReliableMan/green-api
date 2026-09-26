@@ -1,0 +1,44 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.instance {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout {
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logout:hover {
+  background: var(--color-hover);
+}
+
+.empty {
+  padding: 24px 16px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
