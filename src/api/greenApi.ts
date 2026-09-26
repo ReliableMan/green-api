@@ -148,15 +148,21 @@ export function sendMessage(
   })
 }
 
-export function receiveNotification(
+export async function receiveNotification(
   creds: Credentials,
   receiveTimeout = 20,
   signal?: AbortSignal,
-) {
-  return request<Notification | null>(creds, 'receiveNotification', {
-    query: { receiveTimeout },
-    signal,
-  })
+): Promise<Notification | null> {
+  try {
+    return await request<Notification | null>(creds, 'receiveNotification', {
+      query: { receiveTimeout },
+      signal,
+    })
+  } catch (err) {
+    // Telegram-инстансы при пустой очереди отвечают 408 после таймаута, а не 200 null
+    if (err instanceof GreenApiError && err.status === 408) return null
+    throw err
+  }
 }
 
 export function deleteNotification(
