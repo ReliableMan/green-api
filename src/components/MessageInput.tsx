@@ -14,7 +14,6 @@ export function MessageInput({ onSend }: { onSend: (text: string) => void }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const canSend = text.trim().length > 0
 
-  // Поле растёт вместе с текстом до MAX_HEIGHT
   useLayoutEffect(() => {
     const el = textareaRef.current
     if (!el) return

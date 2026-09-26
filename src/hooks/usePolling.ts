@@ -23,9 +23,6 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 function handleNotification(body: NotificationBody, dispatch: Dispatch<ChatAction>) {
-  if (import.meta.env.DEV) {
-    console.debug('[GREEN-API] notification', body.typeWebhook, body)
-  }
   if (!isIncomingMessage(body)) return
   const text = getMessageText(body.messageData)
   if (!text) return
@@ -60,8 +57,6 @@ async function pollLoop(
       try {
         handleNotification(notification.body, dispatch)
       } finally {
-        // Удаляем всегда, иначе очередь не сдвинется. Если удаление сорвётся,
-        // уведомление придёт снова и отсеется по idMessage
         await deleteNotification(credentials, notification.receiptId, signal)
       }
     } catch (err) {
@@ -75,7 +70,6 @@ async function pollLoop(
   }
 }
 
-// Long-polling очереди уведомлений GREEN-API, пока пользователь вошёл
 export function usePolling() {
   const { state, dispatch } = useChat()
   const { credentials } = state

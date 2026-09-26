@@ -19,7 +19,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     saveCredentials(credentials)
   }, [credentials])
 
-  // Чаты хранятся по инстансу и остаются после выхода — при повторном входе вернутся
   useEffect(() => {
     if (credentials) saveChats(credentials.idInstance, { chats, activeChatId })
   }, [credentials, chats, activeChatId])

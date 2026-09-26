@@ -22,8 +22,6 @@ function updateChat(
   return chats.map((c, i) => (i === index ? updated : c))
 }
 
-// Добавляет сообщение и поднимает чат наверх; дубли по id игнорируются.
-// Входящее в неоткрытый чат увеличивает счётчик непрочитанных
 function addMessage(state: ChatState, chatId: string, message: Message): ChatState {
   const chat = state.chats.find((c) => c.chatId === chatId)
   if (!chat || chat.messages.some((m) => m.id === message.id)) return state

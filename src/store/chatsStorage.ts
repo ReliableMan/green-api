@@ -15,7 +15,6 @@ export function loadChats(idInstance: string): StoredChats {
       if (Array.isArray(data.chats)) {
         const chats = data.chats.map((chat) => ({
           ...chat,
-          // Отправка, прерванная перезагрузкой, могла и не дойти — даём повторить
           messages: chat.messages.map((m) =>
             m.status === 'sending' ? { ...m, status: 'failed' as const } : m,
           ),
@@ -26,16 +25,12 @@ export function loadChats(idInstance: string): StoredChats {
         return { chats, activeChatId }
       }
     }
-  } catch {
-    // Хранилище недоступно или данные повреждены — начинаем с пустого списка
-  }
+  } catch {}
   return { chats: [], activeChatId: null }
 }
 
 export function saveChats(idInstance: string, data: StoredChats): void {
   try {
     localStorage.setItem(keyFor(idInstance), JSON.stringify(data))
-  } catch {
-    // Без localStorage чаты просто не переживут перезагрузку
-  }
+  } catch {}
 }

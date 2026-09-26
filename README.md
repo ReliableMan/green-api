@@ -1,32 +1,81 @@
-# React + TypeScript + Vite
+# Telegram Chat на GREEN-API
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Веб-интерфейс для отправки и получения текстовых сообщений в Telegram через [GREEN-API](https://green-api.com/telegram/docs/).
+Тестовое задание на позицию «Фронтенд разработчик React». Сделано на Telegram вместо MAX.
 
-Currently, two official plugins are available:
+## Возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Вход по `idInstance`, `apiTokenInstance` и `apiUrl` с проверкой состояния инстанса
+- Новый чат по номеру телефона или `@username` через `checkAccount`
+- Отправка сообщений со статусами «отправляется», «отправлено» и «не отправлено» и повтором
+- Получение входящих через HTTP API (long-polling `receiveNotification` и `deleteNotification`)
+- Чат с незнакомым отправителем создаётся автоматически
+- Счётчик непрочитанных, разделители дат, автоскролл
+- Мобильная вёрстка: список чатов и переписка на отдельных экранах
+- Чаты сохраняются в `localStorage` отдельно для каждого инстанса и не пропадают после перезагрузки
 
-## React Compiler
+## Стек
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+React 19, TypeScript, Vite, CSS Modules, состояние на Context и `useReducer`.
+Без UI-китов и сторонних библиотек для состояния и запросов.
 
-## Expanding the Oxlint configuration
+## Запуск
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Нужен Node.js 20.19+ или 22.12+.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Приложение откроется на http://localhost:5173.
+
+Другие команды:
+
+```bash
+npm run build     # проверка типов и production-сборка
+npm run preview   # просмотр production-сборки
+npm run lint      # oxlint
+npm run format    # prettier
+```
+
+## Подготовка инстанса GREEN-API
+
+1. Зарегистрируйтесь в [консоли GREEN-API](https://console.green-api.com) и создайте инстанс Telegram (подойдёт бесплатный тариф «Разработчик»).
+2. Авторизуйте в инстансе свой аккаунт Telegram.
+3. На странице инстанса скопируйте `apiUrl`, `idInstance` и `apiTokenInstance` и введите их на экране входа.
+4. В настройках инстанса:
+   - поле **Webhook URL должно быть пустым**, иначе `receiveNotification` не отдаёт уведомления;
+   - включите уведомления о входящих сообщениях.
+
+## Как пользоваться
+
+1. Войдите с данными инстанса.
+2. Введите номер телефона с кодом страны (`+7 900 123-45-67`) или `@username` и нажмите «Найти».
+3. Отправьте сообщение: Enter — отправить, Shift+Enter — перенос строки.
+4. Ответы собеседника появляются в чате автоматически.
+
+## Ограничения
+
+- Если получатель скрыл номер настройками приватности Telegram, `checkAccount` вернёт `exist: false`. В этом случае ищите по `@username`, либо получатель должен добавить отправителя в контакты.
+- Тариф «Разработчик»: до 3 чатов и 100 проверок `checkAccount`. Повторный поиск уже открытого чата проверку не тратит.
+- Поддерживаются только текстовые сообщения. Остальные типы уведомлений удаляются из очереди.
+- Данные входа хранятся в `sessionStorage` и сбрасываются при закрытии вкладки.
+
+## Особенности реализации
+
+- При пустой очереди Telegram-инстанс может ответить на `receiveNotification` кодом `408` вместо `200 null`. Такой ответ считается пустой очередью, а не ошибкой.
+- Уведомление удаляется из очереди всегда, даже если его не удалось обработать. Иначе очередь не сдвинется. Повторно пришедшие сообщения отсеиваются по `idMessage`.
+- Цикл получения отменяется через `AbortController` при выходе и размонтировании. При сетевых ошибках он делает паузу и переподключается, в интерфейсе показывается плашка «Нет связи».
+
+## Структура
+
+```
+src/
+  api/          запросы к GREEN-API и разбор уведомлений
+  components/   компоненты интерфейса и их CSS Modules
+  hooks/        usePolling (получение), useSendMessage (отправка)
+  store/        Context, reducer, сохранение в storage
+  types/        типы ответов GREEN-API
+  utils/        разбор номера и username, форматирование дат
+```

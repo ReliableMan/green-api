@@ -3,7 +3,6 @@ import type { Message } from '../store/types'
 import { dayKey, formatDay, formatTime } from '../utils/time'
 import styles from './MessageList.module.css'
 
-// Насколько близко к низу (px) считаем, что пользователь «внизу» переписки
 const STICK_THRESHOLD = 120
 
 interface MessageListProps {
@@ -11,8 +10,6 @@ interface MessageListProps {
   onRetry: (message: Message) => void
 }
 
-// Монтируется заново для каждого чата (key в ChatWindow), поэтому при открытии
-// чата лента сразу оказывается внизу
 export function MessageList({ messages, onRetry }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
@@ -25,7 +22,6 @@ export function MessageList({ messages, onRetry }: MessageListProps) {
     const added = messages.length > prevCount.current
     prevCount.current = messages.length
     if (!added) return
-    // Новое входящее не сдёргивает ленту, если пользователь читает историю выше
     const ownMessage = messages.at(-1)?.direction === 'out'
     if (isFirst || stickToBottom.current || ownMessage) {
       el.scrollTo({ top: el.scrollHeight, behavior: isFirst ? 'instant' : 'smooth' })

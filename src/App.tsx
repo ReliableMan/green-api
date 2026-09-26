@@ -14,7 +14,6 @@ function App() {
   }
 
   return (
-    // data-view переключает экраны на мобильной ширине: список или открытый чат
     <div className={styles.app} data-view={state.activeChatId ? 'chat' : 'list'}>
       <Sidebar />
       <ChatWindow />

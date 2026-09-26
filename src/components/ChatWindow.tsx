@@ -12,7 +12,6 @@ export function ChatWindow() {
   const chat = state.chats.find((c) => c.chatId === state.activeChatId)
   const hasChat = Boolean(chat)
 
-  // Esc закрывает чат, как в Telegram Web
   useEffect(() => {
     if (!hasChat) return
     function handleKeyDown(e: KeyboardEvent) {

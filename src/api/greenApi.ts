@@ -2,23 +2,17 @@ import type {
   CheckAccountParams,
   CheckAccountResponse,
   Credentials,
-  DeleteNotificationResponse,
   GetStateInstanceResponse,
   Notification,
   SendMessageResponse,
 } from '../types/greenApi'
 
-export type GreenApiErrorKind =
-  'network' | 'auth' | 'rateLimit' | 'quota' | 'http' | 'api'
-
 export class GreenApiError extends Error {
-  readonly kind: GreenApiErrorKind
   readonly status?: number
 
-  constructor(kind: GreenApiErrorKind, message: string, status?: number) {
+  constructor(message: string, status?: number) {
     super(message)
     this.name = 'GreenApiError'
-    this.kind = kind
     this.status = status
   }
 }
@@ -27,16 +21,14 @@ interface RequestOptions {
   httpMethod?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   query?: Record<string, string | number>
-  // Часть пути после токена, например receiptId для deleteNotification
   pathSuffix?: string | number
   signal?: AbortSignal
 }
 
 function buildUrl(creds: Credentials, method: string, options: RequestOptions): string {
   const base = creds.apiUrl.trim().replace(/\/+$/, '')
-  let url = `${base}/waInstance${creds.idInstance.trim()}/${method}/${encodeURIComponent(
-    creds.apiTokenInstance.trim(),
-  )}`
+  const token = encodeURIComponent(creds.apiTokenInstance.trim())
+  let url = `${base}/waInstance${creds.idInstance.trim()}/${method}/${token}`
   if (options.pathSuffix !== undefined) {
     url += `/${encodeURIComponent(String(options.pathSuffix))}`
   }
@@ -50,29 +42,21 @@ function buildUrl(creds: Credentials, method: string, options: RequestOptions): 
   return url
 }
 
-function httpError(status: number, details: string): GreenApiError {
+function httpErrorMessage(status: number, details: string): string {
   switch (status) {
     case 401:
     case 403:
-      return new GreenApiError('auth', 'Неверный idInstance или apiTokenInstance', status)
+      return 'Неверный idInstance или apiTokenInstance'
     case 429:
-      return new GreenApiError(
-        'rateLimit',
-        'Слишком много запросов, попробуйте позже',
-        status,
-      )
+      return 'Слишком много запросов, попробуйте позже'
     case 466:
-      return new GreenApiError('quota', 'Исчерпан лимит тарифа GREEN-API', status)
+      return 'Исчерпан лимит тарифа GREEN-API'
     default:
-      return new GreenApiError(
-        'http',
-        `Ошибка GREEN-API (${status})${details ? `: ${details}` : ''}`,
-        status,
-      )
+      return `Ошибка GREEN-API (${status})${details ? `: ${details}` : ''}`
   }
 }
 
-export async function request<T>(
+async function request<T>(
   creds: Credentials,
   method: string,
   options: RequestOptions = {},
@@ -90,7 +74,6 @@ export async function request<T>(
   } catch (err) {
     if (signal?.aborted) throw err
     throw new GreenApiError(
-      'network',
       'Не удалось связаться с GREEN-API. Проверьте подключение к интернету и apiUrl',
     )
   }
@@ -98,25 +81,24 @@ export async function request<T>(
   const text = await res.text()
 
   if (!res.ok) {
-    throw httpError(res.status, text.slice(0, 200))
+    throw new GreenApiError(httpErrorMessage(res.status, text.slice(0, 200)), res.status)
   }
 
   if (!text) return null as T
   try {
     return JSON.parse(text) as T
   } catch {
-    throw new GreenApiError('api', 'GREEN-API вернул некорректный ответ', res.status)
+    throw new GreenApiError('GREEN-API вернул некорректный ответ', res.status)
   }
 }
 
-export function getStateInstance(creds: Credentials, signal?: AbortSignal) {
-  return request<GetStateInstanceResponse>(creds, 'getStateInstance', { signal })
+export function getStateInstance(creds: Credentials) {
+  return request<GetStateInstanceResponse>(creds, 'getStateInstance')
 }
 
 export async function checkAccount(
   creds: Credentials,
   params: CheckAccountParams,
-  signal?: AbortSignal,
 ): Promise<CheckAccountResponse> {
   const body =
     'phoneNumber' in params
@@ -126,32 +108,25 @@ export async function checkAccount(
   const data = await request<CheckAccountResponse>(creds, 'checkAccount', {
     httpMethod: 'POST',
     body,
-    signal,
   })
 
   if (data.status === false) {
-    throw new GreenApiError('api', data.reason || 'Не удалось проверить аккаунт')
+    throw new GreenApiError(data.reason || 'Не удалось проверить аккаунт')
   }
   return data
 }
 
-export function sendMessage(
-  creds: Credentials,
-  chatId: string,
-  message: string,
-  signal?: AbortSignal,
-) {
+export function sendMessage(creds: Credentials, chatId: string, message: string) {
   return request<SendMessageResponse>(creds, 'sendMessage', {
     httpMethod: 'POST',
     body: { chatId, message },
-    signal,
   })
 }
 
 export async function receiveNotification(
   creds: Credentials,
-  receiveTimeout = 20,
-  signal?: AbortSignal,
+  receiveTimeout: number,
+  signal: AbortSignal,
 ): Promise<Notification | null> {
   try {
     return await request<Notification | null>(creds, 'receiveNotification', {
@@ -159,18 +134,17 @@ export async function receiveNotification(
       signal,
     })
   } catch (err) {
-    // Telegram-инстансы при пустой очереди отвечают 408 после таймаута, а не 200 null
     if (err instanceof GreenApiError && err.status === 408) return null
     throw err
   }
 }
 
-export function deleteNotification(
+export async function deleteNotification(
   creds: Credentials,
   receiptId: number,
-  signal?: AbortSignal,
-) {
-  return request<DeleteNotificationResponse>(creds, 'deleteNotification', {
+  signal: AbortSignal,
+): Promise<void> {
+  await request(creds, 'deleteNotification', {
     httpMethod: 'DELETE',
     pathSuffix: receiptId,
     signal,

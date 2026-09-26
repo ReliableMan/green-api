@@ -14,9 +14,7 @@ export function loadCredentials(): Credentials | null {
         apiTokenInstance: data.apiTokenInstance,
       }
     }
-  } catch {
-    // Хранилище недоступно или данные повреждены — просто попросим войти заново
-  }
+  } catch {}
   return null
 }
 
@@ -27,7 +25,5 @@ export function saveCredentials(credentials: Credentials | null): void {
     } else {
       sessionStorage.removeItem(KEY)
     }
-  } catch {
-    // Без sessionStorage вход просто не переживёт перезагрузку страницы
-  }
+  } catch {}
 }

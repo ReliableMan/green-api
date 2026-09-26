@@ -5,17 +5,14 @@ export type RecipientParseResult =
 
 const USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{3,31}$/
 
-export function normalizePhone(input: string): string {
+function normalizePhone(input: string): string {
   let digits = input.replace(/\D/g, '')
-  // Российский формат 8XXXXXXXXXX → 7XXXXXXXXXX
   if (digits.length === 11 && digits.startsWith('8')) {
     digits = `7${digits.slice(1)}`
   }
   return digits
 }
 
-// Разбирает ввод «номер или @username». key — нормализованное значение для поиска
-// уже открытого чата, чтобы не тратить повторную проверку checkAccount.
 export function parseRecipient(input: string): RecipientParseResult {
   const value = input.trim()
   if (!value) {
