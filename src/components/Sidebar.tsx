@@ -1,4 +1,6 @@
 import { useChat } from '../store/useChat'
+import { ChatList } from './ChatList'
+import { NewChatForm } from './NewChatForm'
 import styles from './Sidebar.module.css'
 
 export function Sidebar() {
@@ -16,7 +18,13 @@ export function Sidebar() {
           Выйти
         </button>
       </header>
-      <div className={styles.empty}>Чатов пока нет</div>
+      {state.connectionError && (
+        <div className={styles.connection} role="status">
+          Нет связи с GREEN-API: {state.connectionError}. Переподключаемся…
+        </div>
+      )}
+      <NewChatForm />
+      <ChatList />
     </aside>
   )
 }

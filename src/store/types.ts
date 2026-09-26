@@ -22,8 +22,21 @@ export interface Chat {
 
 export interface ChatState {
   credentials: Credentials | null
+  // Порядок — по последней активности, сверху самый свежий
   chats: Chat[]
   activeChatId: string | null
+  // Ошибка цикла получения уведомлений; null — соединение в порядке
+  connectionError: string | null
 }
 
-export type ChatAction = { type: 'login'; credentials: Credentials } | { type: 'logout' }
+export type ChatAction =
+  | { type: 'login'; credentials: Credentials }
+  | { type: 'logout' }
+  // Открывает чат, создавая его при необходимости
+  | { type: 'openChat'; chatId: string; title: string; lookup?: string }
+  | { type: 'selectChat'; chatId: string | null }
+  | { type: 'addMessage'; chatId: string; message: Message }
+  // Входящее сообщение; чат с title создаётся, если его ещё нет
+  | { type: 'receiveMessage'; chatId: string; title: string; message: Message }
+  | { type: 'updateMessage'; chatId: string; messageId: string; patch: Partial<Message> }
+  | { type: 'setConnectionError'; error: string | null }
