@@ -23,6 +23,9 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 function handleNotification(body: NotificationBody, dispatch: Dispatch<ChatAction>) {
+  if (import.meta.env.DEV) {
+    console.debug('[GREEN-API] notification', body.typeWebhook, body)
+  }
   if (!isIncomingMessage(body)) return
   const text = getMessageText(body.messageData)
   if (!text) return

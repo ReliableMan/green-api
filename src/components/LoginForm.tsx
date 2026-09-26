@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { getStateInstance, GreenApiError } from '../api/greenApi'
+import { loadChats } from '../store/chatsStorage'
 import { useChat } from '../store/useChat'
 import type { Credentials, StateInstance } from '../types/greenApi'
 import styles from './LoginForm.module.css'
@@ -68,7 +69,7 @@ export function LoginForm() {
     try {
       const { stateInstance } = await getStateInstance(credentials)
       if (stateInstance === 'authorized') {
-        dispatch({ type: 'login', credentials })
+        dispatch({ type: 'login', credentials, ...loadChats(credentials.idInstance) })
         return
       }
       setSubmitError(

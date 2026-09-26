@@ -40,7 +40,12 @@ function addMessage(state: ChatState, chatId: string, message: Message): ChatSta
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case 'login':
-      return { ...initialState, credentials: action.credentials }
+      return {
+        ...initialState,
+        credentials: action.credentials,
+        chats: action.chats,
+        activeChatId: action.activeChatId,
+      }
 
     case 'logout':
       return initialState

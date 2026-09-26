@@ -30,7 +30,13 @@ export interface ChatState {
 }
 
 export type ChatAction =
-  | { type: 'login'; credentials: Credentials }
+  // chats и activeChatId — восстановленные из localStorage для этого инстанса
+  | {
+      type: 'login'
+      credentials: Credentials
+      chats: Chat[]
+      activeChatId: string | null
+    }
   | { type: 'logout' }
   // Открывает чат, создавая его при необходимости
   | { type: 'openChat'; chatId: string; title: string; lookup?: string }
