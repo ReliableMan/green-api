@@ -3,6 +3,8 @@
 Веб-интерфейс для отправки и получения текстовых сообщений в Telegram через [GREEN-API](https://green-api.com/telegram/docs/).
 Тестовое задание на позицию «Фронтенд разработчик React». Сделано на Telegram вместо MAX.
 
+**Демо:** https://green-api-nu-seven.vercel.app/
+
 ## Возможности
 
 - Вход по `idInstance`, `apiTokenInstance` и `apiUrl` с проверкой состояния инстанса
