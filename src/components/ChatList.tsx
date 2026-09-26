@@ -36,17 +36,27 @@ export function ChatList() {
                     <span className={styles.time}>{formatChatTime(last.timestamp)}</span>
                   )}
                 </div>
-                <div className={styles.preview}>
-                  {last ? (
-                    <>
-                      {last.direction === 'out' && (
-                        <span className={styles.you}>Вы: </span>
-                      )}
-                      {last.text}
-                    </>
-                  ) : (
-                    'Нет сообщений'
-                  )}
+                <div className={styles.bottom}>
+                  <span className={styles.preview}>
+                    {last ? (
+                      <>
+                        {last.direction === 'out' && (
+                          <span className={styles.you}>Вы: </span>
+                        )}
+                        {last.text}
+                      </>
+                    ) : (
+                      'Нет сообщений'
+                    )}
+                  </span>
+                  {!active && chat.unread ? (
+                    <span
+                      className={styles.badge}
+                      aria-label={`Непрочитанных: ${chat.unread}`}
+                    >
+                      {chat.unread}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </button>

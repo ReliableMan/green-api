@@ -48,3 +48,9 @@
   color: var(--color-text-secondary);
   opacity: 0.6;
 }
+
+@media (max-width: 768px) {
+  .form {
+    padding: 6px 8px 8px;
+  }
+}

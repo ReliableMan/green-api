@@ -22,18 +22,34 @@ function updateChat(
   return chats.map((c, i) => (i === index ? updated : c))
 }
 
-// Добавляет сообщение и поднимает чат наверх; дубли по id игнорируются
+// Добавляет сообщение и поднимает чат наверх; дубли по id игнорируются.
+// Входящее в неоткрытый чат увеличивает счётчик непрочитанных
 function addMessage(state: ChatState, chatId: string, message: Message): ChatState {
   const chat = state.chats.find((c) => c.chatId === chatId)
   if (!chat || chat.messages.some((m) => m.id === message.id)) return state
+  const isUnread = message.direction === 'in' && chatId !== state.activeChatId
   return {
     ...state,
     chats: updateChat(
       state.chats,
       chatId,
-      (c) => ({ ...c, messages: [...c.messages, message] }),
+      (c) => ({
+        ...c,
+        messages: [...c.messages, message],
+        unread: isUnread ? (c.unread ?? 0) + 1 : c.unread,
+      }),
       true,
     ),
+  }
+}
+
+function selectChat(state: ChatState, chatId: string | null): ChatState {
+  return {
+    ...state,
+    activeChatId: chatId,
+    chats: chatId
+      ? updateChat(state.chats, chatId, (c) => (c.unread ? { ...c, unread: 0 } : c))
+      : state.chats,
   }
 }
 
@@ -53,16 +69,14 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case 'openChat': {
       const existing = state.chats.find((c) => c.chatId === action.chatId)
       if (existing) {
+        const selected = selectChat(state, action.chatId)
+        if (!action.lookup || existing.lookup) return selected
         return {
-          ...state,
-          activeChatId: action.chatId,
-          chats:
-            action.lookup && !existing.lookup
-              ? updateChat(state.chats, action.chatId, (c) => ({
-                  ...c,
-                  lookup: action.lookup,
-                }))
-              : state.chats,
+          ...selected,
+          chats: updateChat(selected.chats, action.chatId, (c) => ({
+            ...c,
+            lookup: action.lookup,
+          })),
         }
       }
       const chat: Chat = {
@@ -75,7 +89,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     }
 
     case 'selectChat':
-      return { ...state, activeChatId: action.chatId }
+      return selectChat(state, action.chatId)
 
     case 'addMessage':
       return addMessage(state, action.chatId, action.message)
@@ -88,6 +102,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         chatId: action.chatId,
         title: action.title,
         messages: [action.message],
+        unread: 1,
       }
       return { ...state, chats: [chat, ...state.chats] }
     }

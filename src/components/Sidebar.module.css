@@ -42,3 +42,14 @@
   color: var(--color-error);
   font-size: 13px;
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    border-right: none;
+  }
+
+  :global([data-view='chat']) .sidebar {
+    display: none;
+  }
+}

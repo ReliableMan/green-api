@@ -1,49 +1,87 @@
-import { useEffect, useRef } from 'react'
+import { Fragment, useLayoutEffect, useRef } from 'react'
 import type { Message } from '../store/types'
-import { formatTime } from '../utils/time'
+import { dayKey, formatDay, formatTime } from '../utils/time'
 import styles from './MessageList.module.css'
+
+// Насколько близко к низу (px) считаем, что пользователь «внизу» переписки
+const STICK_THRESHOLD = 120
 
 interface MessageListProps {
   messages: Message[]
   onRetry: (message: Message) => void
 }
 
+// Монтируется заново для каждого чата (key в ChatWindow), поэтому при открытии
+// чата лента сразу оказывается внизу
 export function MessageList({ messages, onRetry }: MessageListProps) {
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const stickToBottom = useRef(true)
+  const prevCount = useRef(0)
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages.length])
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const isFirst = prevCount.current === 0
+    const added = messages.length > prevCount.current
+    prevCount.current = messages.length
+    if (!added) return
+    // Новое входящее не сдёргивает ленту, если пользователь читает историю выше
+    const ownMessage = messages.at(-1)?.direction === 'out'
+    if (isFirst || stickToBottom.current || ownMessage) {
+      el.scrollTo({ top: el.scrollHeight, behavior: isFirst ? 'instant' : 'smooth' })
+    }
+  }, [messages])
+
+  function handleScroll() {
+    const el = scrollRef.current
+    if (!el) return
+    stickToBottom.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < STICK_THRESHOLD
+  }
 
   if (messages.length === 0) {
     return (
       <div className={styles.emptyWrap}>
-        <span className={styles.empty}>Нет сообщений</span>
+        <span className={styles.chip}>Нет сообщений</span>
       </div>
     )
   }
 
   return (
-    <div className={styles.scroll}>
+    <div ref={scrollRef} className={styles.scroll} onScroll={handleScroll}>
       <ul className={styles.list}>
-        {messages.map((m) => (
-          <li key={m.id} className={styles.row} data-direction={m.direction}>
-            <div className={styles.bubble} data-direction={m.direction}>
-              <span className={styles.text}>{m.text}</span>
-              <span className={styles.meta}>
-                {formatTime(m.timestamp)}
-                {m.direction === 'out' && <StatusIcon status={m.status} />}
-              </span>
-            </div>
-            {m.status === 'failed' && (
-              <button type="button" className={styles.retry} onClick={() => onRetry(m)}>
-                Не отправлено. Повторить
-              </button>
-            )}
-          </li>
-        ))}
+        {messages.map((m, i) => {
+          const newDay =
+            i === 0 || dayKey(messages[i - 1].timestamp) !== dayKey(m.timestamp)
+          return (
+            <Fragment key={m.id}>
+              {newDay && (
+                <li className={styles.day}>
+                  <span className={styles.chip}>{formatDay(m.timestamp)}</span>
+                </li>
+              )}
+              <li className={styles.row} data-direction={m.direction}>
+                <div className={styles.bubble} data-direction={m.direction}>
+                  <span className={styles.text}>{m.text}</span>
+                  <span className={styles.meta}>
+                    {formatTime(m.timestamp)}
+                    {m.direction === 'out' && <StatusIcon status={m.status} />}
+                  </span>
+                </div>
+                {m.status === 'failed' && (
+                  <button
+                    type="button"
+                    className={styles.retry}
+                    onClick={() => onRetry(m)}
+                  >
+                    Не отправлено. Повторить
+                  </button>
+                )}
+              </li>
+            </Fragment>
+          )
+        })}
       </ul>
-      <div ref={bottomRef} />
     </div>
   )
 }

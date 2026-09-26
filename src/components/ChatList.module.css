@@ -49,9 +49,17 @@
   font-size: 12px;
 }
 
-.preview {
-  overflow: hidden;
+.bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 2px;
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   color: var(--color-text-secondary);
   font-size: 14px;
   text-overflow: ellipsis;
@@ -66,6 +74,20 @@
 .item[data-active] .preview,
 .item[data-active] .you {
   color: rgba(255, 255, 255, 0.85);
+}
+
+.badge {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: var(--color-meta-out);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  text-align: center;
 }
 
 .empty {

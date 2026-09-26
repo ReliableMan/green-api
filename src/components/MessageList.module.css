@@ -95,10 +95,30 @@
   justify-content: center;
 }
 
-.empty {
+.day {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.chip {
   padding: 4px 12px;
   border-radius: 16px;
   background: rgba(0, 0, 0, 0.2);
   color: #ffffff;
   font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .scroll {
+    padding: 8px;
+  }
+
+  .bubble {
+    max-width: 88%;
+  }
 }

@@ -18,6 +18,8 @@ export interface Chat {
   // Номер или @username, по которому чат создан — чтобы не тратить повторную проверку
   lookup?: string
   messages: Message[]
+  // Входящие, пришедшие, пока чат не был открыт
+  unread?: number
 }
 
 export interface ChatState {
